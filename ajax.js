@@ -1,10 +1,31 @@
 (function (window, undefined) {
+
+
+
+
     function ajax(options) {
+
+        function convertToFormData() {
+            var formData=new FormData()
+            for (var key in data) {
+                formData.append(key,data[key])
+            }
+            return formData;
+        }
+
+        function existsFile(data) {
+            for (var key in data) {
+                if(data[key].__proto__.toString()==="[object File]"){
+                    return true;
+                }
+            }
+            return false;
+        }
 
         function processFormData() {
             if (data instanceof FormData) {
                 var temp = {};
-                formData.forEach(function (value, key) {
+                data.forEach(function (value, key) {
                     temp[key] = value;
                 });
                 data = temp
@@ -13,6 +34,10 @@
 
         //编码数据
         function setData() {
+            if (typeof data === "function") {
+                data = data()
+            }
+
             //设置对象的遍码
             function setObjData(data, parentName) {
                 function encodeData(name, value, parentName) {
@@ -55,13 +80,17 @@
             }
 
 
-            if (/\bjson\b/.test(contentType)) {
+            if (/\bjson\b/.test(contentType) || method === "json") {
                 processFormData();
                 data = JSON.stringify(data)
                 method = 'post'
             } else if (data) {
                 if (typeof data === "string") {
                     data = setStrData(data);
+                } else if (method !== "get" && typeof data === "object" && existsFile(data)) {
+                    data=convertToFormData()
+                    method = "formPost"
+                    return
                 } else if (method !== "get" && data instanceof FormData) {
                     method = "formPost"
                     return
@@ -79,6 +108,7 @@
 
         // JSONP
         function createJsonp() {
+            before();
             var script = document.createElement("script"),
                 timeName = new Date().getTime() + Math.round(Math.random() * 1000),
                 callback = "JSONP_" + timeName;
@@ -181,13 +211,15 @@
                     if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) {
                         success(xhr.response);
                     } else {
-                        error(xhr.status, xhr.statusText);
+                        error(xhr);
                     }
                     complete(xhr)
                 }
             };
             //发送请求
-            xhr.send(method === "get" ? null : data);
+            let sendData = method === "get" ? null : data;
+            before(sendData);
+            xhr.send(sendData);
             setTime(); //请求超时
         }
 
@@ -211,7 +243,7 @@
             timeout_flag = null, //超时标识
             xhr = null; //xhr对角
         setData();
-        before();
+
         if (dataType === "jsonp") {
             createJsonp();
         } else {
@@ -220,20 +252,34 @@
     }
 
     window.ajax = ajax;
-    window.post = function (url, data, callback) {
-        if (typeof data === "function") {
-            callback = callback ? callback : data
+    window.standard = {
+        ajax: ajax,
+        post: function (url, data, callback) {
+            if (typeof data === "function") {
+                callback = callback ? callback : data
+                data = null
+            }
+            ajax({
+                url: url, method: 'POST', data: data, success: callback
+            })
+        },
+        get: function (url, data, callback) {
+            if (typeof data === "function") {
+                callback = callback ? callback : data
+                data = null
+            }
+            ajax({
+                url: url, method: 'get', data: data, success: callback
+            })
+        },
+        postJson: function (url, data, callback) {
+            if (typeof data === "function") {
+                callback = callback ? callback : data
+                data = null
+            }
+            ajax({
+                url: url, method: 'POST', data: data, success: callback, contentType: "application/json; charset=utf-8"
+            })
         }
-        ajax({
-            url: url, method: 'POST', data: data, success: callback
-        })
-    }
-    window.get = function (url, data, callback) {
-        if (typeof data === "function") {
-            callback = callback ? callback : data
-        }
-        ajax({
-            url: url, method: 'get', data: data, success: callback
-        })
     }
 })(window);
