@@ -1,22 +1,35 @@
-一个小型的ajax库，没有使用jquery，减少加载Jquery库的时间，也不用负担Jquery复杂的逻辑处理带来的性能消耗。其中整合jsonp，方便跨域。
+一个小型的ajax库，提供开箱即用的ajax方法。
 
 示例：
 
-```bash
+```javascript
 ajax({
     type:"post",
     url:"", //添加自己的接口链接
     timeOut:5000,
-    before:function(){
-      console.log("before");  
+    before:function(data){
+      console.log("请求发送的数据:"+data);  
     },
-    success:function(str){
-        console.log(str);
+    success:function(response){
+        console.log(response);
     },
-    error:function(){
-        console.log("error");
+    error:function(xhr){
+        console.log("error:"+xhr.status);
+    },
+    complte:function(xhr){
+        console.log("complte:"+xhr.status);
     }
 });
+```
+
+除了ajax方法外,还提供了封装的函数
+
+```javascript
+standard.get(url,data,successCallback)
+standard.post(url,data,successCallback)
+
+//发送Content-Type为application/json; charset=utf-8的数据
+standard.postJson(url,data,successCallback) 
 ```
 
 参数表：
@@ -25,7 +38,7 @@ ajax({
 |:----|:----|:----|:----|
 | url | "" | 请求的链接 | string |
 | method | get | 请求的方法 | get,post,json |
-| data | null | 请求的数据 | object,string |
+| data | null | 请求的数据 | object,string,FormData,array |
 | contentType | "" | 请求头 | string |
 | dataType | "" | 请求的类型 | jsonp |
 | async | true | 是否异步 | blooean |
@@ -35,4 +48,4 @@ ajax({
 | error | function(xhr){} | 请求报错执行的函数 | function |
 | complete | function(xhr){} | 请求结束的回调函数 | function |
 
-详细的说明，请看[这里](http://blackfe.com/2016/05/04/Javascript/%E8%87%AA%E5%B7%B1%E5%8A%A8%E6%89%8B%E5%86%99%E4%B8%80%E4%B8%AAAjax/)
+min版本使用 [javascript-minifier](https://javascript-minifier.com/)进行压缩
