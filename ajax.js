@@ -1,9 +1,19 @@
-(function(window,undefined) {
+(function (window, undefined) {
     function ajax(options) {
+
+        function processFormData() {
+            if (data instanceof FormData) {
+                var temp = {};
+                formData.forEach(function (value, key) {
+                    temp[key] = value;
+                });
+                data = temp
+            }
+        }
 
         //编码数据
         function setData() {
-        	//设置对象的遍码
+            //设置对象的遍码
             function setObjData(data, parentName) {
                 function encodeData(name, value, parentName) {
                     var items = [];
@@ -17,11 +27,12 @@
                     }
                     return items;
                 }
-                var arr = [],value;
+
+                var arr = [], value;
                 if (Object.prototype.toString.call(data) == '[object Array]') {
                     for (var i = 0, len = data.length; i < len; i++) {
                         value = data[i];
-                        arr = arr.concat(encodeData( typeof value == "object"?i:"", value, parentName));
+                        arr = arr.concat(encodeData(typeof value == "object" ? i : "", value, parentName));
                     }
                 } else if (Object.prototype.toString.call(data) == '[object Object]') {
                     for (var key in data) {
@@ -30,38 +41,49 @@
                     }
                 }
                 return arr;
-            };
+            }
+
             //设置字符串的遍码，字符串的格式为：a=1&b=2;
             function setStrData(data) {
                 var arr = data.split("&");
                 for (var i = 0, len = arr.length; i < len; i++) {
-                    name = encodeURIComponent(arr[i].split("=")[0]);
-                    value = encodeURIComponent(arr[i].split("=")[1]);
+                    var name = encodeURIComponent(arr[i].split("=")[0]);
+                    var value = encodeURIComponent(arr[i].split("=")[1]);
                     arr[i] = name + "=" + value;
                 }
                 return arr;
             }
 
-            if (data) {
+
+            if (/\bjson\b/.test(contentType)) {
+                processFormData();
+                data = JSON.stringify(data)
+                method = 'post'
+            } else if (data) {
                 if (typeof data === "string") {
                     data = setStrData(data);
+                } else if (method !== "get" && data instanceof FormData) {
+                    method = "formPost"
+                    return
                 } else if (typeof data === "object") {
+                    processFormData();
                     data = setObjData(data);
                 }
                 data = data.join("&").replace("/%20/g", "+");
                 //若是使用get方法或JSONP，则手动添加到URL中
-                if (type === "get" || dataType === "jsonp") {
+                if (method === "get" || dataType === "jsonp") {
                     url += url.indexOf("?") > -1 ? (url.indexOf("=") > -1 ? "&" + data : data) : "?" + data;
                 }
             }
         }
+
         // JSONP
         function createJsonp() {
             var script = document.createElement("script"),
                 timeName = new Date().getTime() + Math.round(Math.random() * 1000),
                 callback = "JSONP_" + timeName;
 
-            window[callback] = function(data) {
+            window[callback] = function (data) {
                 clearTimeout(timeout_flag);
                 document.body.removeChild(script);
                 success(data);
@@ -71,10 +93,11 @@
             document.body.appendChild(script);
             setTime(callback, script);
         }
+
         //设置请求超时
         function setTime(callback, script) {
             if (timeOut !== undefined) {
-                timeout_flag = setTimeout(function() {
+                timeout_flag = setTimeout(function () {
                     if (dataType === "jsonp") {
                         delete window[callback];
                         document.body.removeChild(script);
@@ -87,6 +110,30 @@
 
                 }, timeOut);
             }
+        }
+
+        /**
+         * 对返回的数据进行包装处理
+         * @param xhr
+         */
+        function xhrWrap(xhr) {
+            var xhrWrapper = {}
+            xhrWrapper.responseURL = xhr.responseURL
+            xhrWrapper.statusText = xhr.statusText
+            xhrWrapper.withCredentials = xhr.withCredentials
+            xhrWrapper.responseText = xhr.responseText
+            xhrWrapper.status = xhr.status
+            xhrWrapper.contentType = xhr.getResponseHeader("Content-Type")
+            var responseText = xhrWrapper.responseText
+            if (/\bjson\b/.test(xhrWrapper.contentType)) {
+                try {
+                    xhrWrapper.response = JSON.parse(responseText)
+                } catch (e) {
+                    xhrWrapper.response = responseText
+                    xhrWrapper.statusText = "json parse error"
+                }
+            }
+            return xhrWrapper
         }
 
         // XHR
@@ -103,23 +150,26 @@
                         try {
                             var version = versions[i] + ".XMLHTTP";
                             return new ActiveXObject(version);
-                        } catch (e) {}
+                        } catch (e) {
+                        }
                     }
                 }
             }
+
             //创建对象。
             xhr = getXHR();
-            xhr.open(type, url, async);
+            xhr.open(method, url, async);
             //设置请求头
-            if (type === "post" && !contentType) {
+            if (method === "post" && method !== "formPost" && !contentType) {
                 //若是post提交，则设置content-Type 为application/x-www-four-urlencoded
                 xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
             } else if (contentType) {
                 xhr.setRequestHeader("Content-Type", contentType);
             }
             //添加监听
-            xhr.onreadystatechange = function() {
+            xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
+                    xhr = xhrWrap(xhr)
                     if (timeOut !== undefined) {
                         //由于执行abort()方法后，有可能触发onreadystatechange事件，
                         //所以设置一个timeout_bool标识，来忽略中止触发的事件。
@@ -129,29 +179,34 @@
                         clearTimeout(timeout_flag);
                     }
                     if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) {
-
-                        success(xhr.responseText);
+                        success(xhr.response);
                     } else {
                         error(xhr.status, xhr.statusText);
                     }
+                    complete(xhr)
                 }
             };
             //发送请求
-            xhr.send(type === "get" ? null : data);
+            xhr.send(method === "get" ? null : data);
             setTime(); //请求超时
         }
 
 
         var url = options.url || "", //请求的链接
-            type = (options.type || "get").toLowerCase(), //请求的方法,默认为get
+            method = ((options.type || options.method) || "get").toLowerCase(), //请求的方法,默认为get
             data = options.data || null, //请求的数据
             contentType = options.contentType || "", //请求头
             dataType = options.dataType || "", //请求的类型
             async = options.async === undefined ? true : options.async, //是否异步，默认为true.
             timeOut = options.timeOut, //超时时间。 
-            before = options.before || function() {}, //发送之前执行的函数
-            error = options.error || function() {}, //错误执行的函数
-            success = options.success || function() {}; //请求成功的回调函数
+            before = options.before || function () {
+            }, //发送之前执行的函数
+            error = options.error || function () {
+            }, //错误执行的函数
+            success = options.success || function () {
+            }, //请求成功的回调函数
+            complete = options.complete || function () {
+            }; //请求结束的回调函数
         var timeout_bool = false, //是否请求超时
             timeout_flag = null, //超时标识
             xhr = null; //xhr对角
@@ -163,5 +218,22 @@
             createXHR();
         }
     }
+
     window.ajax = ajax;
-  })(window);
+    window.post = function (url, data, callback) {
+        if (typeof data === "function") {
+            callback = callback ? callback : data
+        }
+        ajax({
+            url: url, method: 'POST', data: data, success: callback
+        })
+    }
+    window.get = function (url, data, callback) {
+        if (typeof data === "function") {
+            callback = callback ? callback : data
+        }
+        ajax({
+            url: url, method: 'get', data: data, success: callback
+        })
+    }
+})(window);
