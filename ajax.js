@@ -1,21 +1,18 @@
 (function (window, undefined) {
 
-
-
-
     function ajax(options) {
 
         function convertToFormData() {
-            var formData=new FormData()
+            var formData = new FormData()
             for (var key in data) {
-                formData.append(key,data[key])
+                if (data[key]) formData.append(key, data[key])
             }
             return formData;
         }
 
         function existsFile(data) {
             for (var key in data) {
-                if(data[key].__proto__.toString()==="[object File]"){
+                if (data[key] && data[key].__proto__.toString() === "[object File]") {
                     return true;
                 }
             }
@@ -26,7 +23,7 @@
             if (data instanceof FormData) {
                 var temp = {};
                 data.forEach(function (value, key) {
-                    temp[key] = value;
+                    if (value) temp[key] = value;
                 });
                 data = temp
             }
@@ -48,7 +45,7 @@
                     } else {
                         name = encodeURIComponent(name);
                         value = encodeURIComponent(value);
-                        items.push(name + "=" + value);
+                        if (value !== "null" && value) items.push(name + "=" + value);
                     }
                     return items;
                 }
@@ -74,7 +71,7 @@
                 for (var i = 0, len = arr.length; i < len; i++) {
                     var name = encodeURIComponent(arr[i].split("=")[0]);
                     var value = encodeURIComponent(arr[i].split("=")[1]);
-                    arr[i] = name + "=" + value;
+                    if (value !== "null" && value) arr[i] = name + "=" + value;
                 }
                 return arr;
             }
@@ -88,7 +85,7 @@
                 if (typeof data === "string") {
                     data = setStrData(data);
                 } else if (method !== "get" && typeof data === "object" && existsFile(data)) {
-                    data=convertToFormData()
+                    data = convertToFormData()
                     method = "formPost"
                     return
                 } else if (method !== "get" && data instanceof FormData) {
@@ -252,34 +249,31 @@
     }
 
     window.ajax = ajax;
-    window.standard = {
-        ajax: ajax,
-        post: function (url, data, callback) {
-            if (typeof data === "function") {
-                callback = callback ? callback : data
-                data = null
-            }
-            ajax({
-                url: url, method: 'POST', data: data, success: callback
-            })
-        },
-        get: function (url, data, callback) {
-            if (typeof data === "function") {
-                callback = callback ? callback : data
-                data = null
-            }
-            ajax({
-                url: url, method: 'get', data: data, success: callback
-            })
-        },
-        postJson: function (url, data, callback) {
-            if (typeof data === "function") {
-                callback = callback ? callback : data
-                data = null
-            }
-            ajax({
-                url: url, method: 'POST', data: data, success: callback, contentType: "application/json; charset=utf-8"
-            })
+    window.post = function (url, data, callback) {
+        if (typeof data === "function") {
+            callback = callback ? callback : data
+            data = null
         }
+        ajax({
+            url: url, method: 'POST', data: data, success: callback
+        })
+    }
+    window.get = function (url, data, callback) {
+        if (typeof data === "function") {
+            callback = callback ? callback : data
+            data = null
+        }
+        ajax({
+            url: url, method: 'get', data: data, success: callback
+        })
+    }
+    window.postJson = function (url, data, callback) {
+        if (typeof data === "function") {
+            callback = callback ? callback : data
+            data = null
+        }
+        ajax({
+            url: url, method: 'POST', data: data, success: callback, contentType: "application/json; charset=utf-8"
+        })
     }
 })(window);
