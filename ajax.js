@@ -45,7 +45,7 @@
                     } else {
                         name = encodeURIComponent(name);
                         value = encodeURIComponent(value);
-                        if (value !== "null" && value) items.push(name + "=" + value);
+                        if (value != "null" && value != "undefined" && value) items.push(name + "=" + value);
                     }
                     return items;
                 }
@@ -71,7 +71,7 @@
                 for (var i = 0, len = arr.length; i < len; i++) {
                     var name = encodeURIComponent(arr[i].split("=")[0]);
                     var value = encodeURIComponent(arr[i].split("=")[1]);
-                    if (value !== "null" && value) arr[i] = name + "=" + value;
+                    if (value != "null" && value != "undefined" && value) arr[i] = name + "=" + value;
                 }
                 return arr;
             }
