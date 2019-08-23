@@ -12,7 +12,7 @@
 
         function existsFile(data) {
             for (var key in data) {
-                if (data[key] && data[key].__proto__.toString() === "[object File]") {
+                if (data[key] && Object.prototype.toString.call(data[key]) === "[object File]") {
                     return true;
                 }
             }
