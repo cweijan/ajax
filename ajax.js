@@ -64,7 +64,8 @@
          */
         function encodeData(name, value, parentName) {
             var items = [];
-            name = parentName === undefined ? name : parentName + "[" + name + "]";
+            name = parentName === undefined ? name :
+                parentName.indexOf("[") != -1 ? parentName + "." + name : parentName + "[" + name + "]";
             if (typeof value === "object" && value !== null) {
                 items = items.concat(setObjData(value, name));
             } else {
@@ -231,6 +232,7 @@
             } else if (contentType) {
                 xhr.setRequestHeader("Content-Type", contentType);
             }
+            xhr.setRequestHeader("X-Requested-With", 'XMLHttpRequest');
 
             var sendData = method === "get" ? null : data;
             before(sendData);
