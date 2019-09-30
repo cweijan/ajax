@@ -9,7 +9,7 @@
     "type": "git",
     "url": "git+https://github.com/cweijan/ajax.git"
   },
-  "keywords": [],
+  "keywords": ["ajax","light"],
   "author": "cweijan",
   "license": "ISC",
   "bugs": {
