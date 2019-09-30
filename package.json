@@ -1,0 +1,20 @@
+{
+  "name": "ajax-j",
+  "version": "1.0.0",
+  "description": "轻量级Ajax库,提供方法ajax,get,post,postJson",
+  "main": "ajax.js",
+  "scripts": {
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cweijan/ajax.git"
+  },
+  "keywords": [],
+  "author": "cweijan",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cweijan/ajax/issues"
+  },
+  "homepage": "https://github.com/cweijan/ajax#readme"
+  
+}

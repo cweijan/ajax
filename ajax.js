@@ -1,5 +1,6 @@
-(function (window, undefined) {
-
+(function () {
+    'use strict';
+    var isCommonjs = typeof module !== 'undefined' && module.exports;
     function ajax(options) {
 
         var url = options.url || "" //请求的链接
@@ -266,8 +267,8 @@
         }
     }
 
-    window.ajax = ajax;
-    window.post = function (url, data, callback) {
+    // window.ajax = ajax;
+    const post = function (url, data, callback) {
         if (typeof data === "function") {
             callback = callback ? callback : data
             data = null
@@ -276,7 +277,7 @@
             url: url, method: 'POST', data: data, success: callback
         })
     }
-    window.get = function (url, data, callback) {
+    const get = function (url, data, callback) {
         if (typeof data === "function") {
             callback = callback ? callback : data
             data = null
@@ -285,7 +286,7 @@
             url: url, method: 'get', data: data, success: callback
         })
     }
-    window.postJson = function (url, data, callback) {
+    const postJson = function (url, data, callback) {
         if (typeof data === "function") {
             callback = callback ? callback : data
             data = null
@@ -294,4 +295,18 @@
             url: url, method: 'POST', data: data, success: callback, contentType: "application/json; charset=utf-8"
         })
     }
-})(window);
+
+    if (isCommonjs) {
+        module.exports = {
+            ajax: ajax,
+            get: get,
+            post: post,
+            postJson: postJson
+        };
+    } else {
+        window.ajax = ajax;
+        window.get = get
+        window.post = post
+        window.postJson = postJson
+    }
+})();

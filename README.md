@@ -1,6 +1,15 @@
 一个小型的ajax库，提供开箱即用的ajax方法。
 
-示例：
+## Install
+
+[min]: https://github.com/cweijan/ajax/blob/master/ajax.min.js
+[max]: https://github.com/cweijan/ajax/blob/master/ajax.js
+
+```
+npm install ajax-j
+```
+
+## Usage
 
 ```javascript
 ajax({
@@ -22,19 +31,36 @@ ajax({
 });
 ```
 
-除了ajax方法外,还提供了封装的函数
+## Other Tool Method
 
 ```javascript
-standard.get(url,data,successCallback)
-standard.post(url,data,successCallback)
 
-//发送Content-Type为application/json; charset=utf-8的数据
-standard.postJson(url,data,successCallback) 
+// using es6 module
+import ajaxJ from 'ajax-j'
+
+ajaxJ.get(url,param,successCallback)
+ajaxJ.post(url,param,successCallback)
+//send post request, Content-Type is "application/json; charset=utf-8"
+ajaxJ.postJson(url,param,successCallback) 
+
+// or you can using promise
+ajax.get(url,param).then(response=>{
+    console.log(response)
+}).catch(xhr=>{
+    console.log(xhr)
+})
+
+
+// if import script direct, invoke method is:
+get(url,param)
+post(url,param)
+postJson(url,param)
+
 ```
 
-参数表：
+param table：
 
-| 参数 | 默认值 | 描述 | 可选值 |
+| param | default | desc | type |
 |:----|:----|:----|:----|
 | url | "" | 请求的链接 | string |
 | method | get | 请求的方法 | get,post,json |
