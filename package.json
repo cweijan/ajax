@@ -1,6 +1,6 @@
 {
   "name": "ajax-j",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "轻量级Ajax库,提供方法ajax,get,post,postJson",
   "main": "ajax.js",
   "scripts": {
